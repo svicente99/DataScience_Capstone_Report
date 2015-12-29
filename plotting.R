@@ -28,3 +28,30 @@ plot_bar_gram <- function(tb, ng) {
   print(paste0("Saving PNG graph: ",nmGraph,".png"))
   dev.off()
 }
+
+# -------------------------------------------------------------------------------------------------------
+
+# plot a word cloud - an handy tool to highlight the most frequent words found in these Corpora
+# Ref.: http://onertipaday.blogspot.com.br/2011/07/word-cloud-in-r.html
+
+if(!require("wordcloud")) {
+    install.packages("wordcloud")
+}
+if(!require("RColorBrewer")) {
+    install.packages("RColorBrewer")
+}
+
+library(wordcloud)
+library(RColorBrewer)
+
+plot_word_cloud <- function(corp) {
+  tdm <- TermDocumentMatrix(corp)
+  m <- as.matrix(tdm)
+  v <- sort(rowSums(m),decreasing=TRUE)
+  d <- data.frame(word = names(v),freq=v)
+  pal <- brewer.pal(9, "BuGn")
+  pal <- pal[-(1:2)]
+  png("wordcloud.png", width=1280,height=800)
+  wordcloud(d$word,d$freq, scale=c(8,.3),min.freq=2,max.words=100, random.order=T, rot.per=.15, colors=pal, vfont=c("sans serif","plain"))
+  dev.off()
+}
