@@ -1,31 +1,43 @@
-# ---------------------------------------------------------------------
+# ---------------------------------------------------------------------------------
 # Coursera.org - Data Science Specialization - Capstone Project
 # 
-# >> Counting on dataset files
+# >> functions to get statistics for Capstone Dataset files - size, lines and words
 # author..: Sergio Vicente (@svicente99)
-# data....: 22th Dec. 2015
-# ---------------------------------------------------------------------
+# data....: 20th Dec. 2015
+# ---------------------------------------------------------------------------------
 
-DATASET_DIR = "./Capstone_Dataset/"
+# this package remove url addresses and some twitter features such as retweets, @people, # (hash tags) and emoticons
+if(!require("qdapRegex")) {
+    install.packages("qdapRegex")
+}
+library(qdapRegex)
 
-cFiles = c("blogs", "news", "twitter")
+removeTweetFeatures <- function(str) 
+{ 
+  # erase url addresses
+  str <- gsub("http\\w+", "", str)
 
-sizeOf <- function(f) {
-  nmFile = paste0("en_US/en_US.",f,".txt")
-  arq <- paste(DATASET_DIR,nmFile,sep="")
-  print(arq)
-  file_size <- file.info(arq)$size / 1024 / 1024
-  print(paste(sprintf("%5.1f",file_size),"Megabytes"))
+  # erase @people names
+  str <- gsub("@\\w+", "", str)
+
+  # erase retweets 
+  str <- gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", str)
+
+  # erase hash tags, emoticons and urls using package 'qdapRegex'
+  str <- rm_hash(str)
+  str <- rm_emoticon(str)
+  str <- rm_url(str)
 }
 
-linesOf <- function(f) {
-  nmFile = paste0("en_US/en_US.",f,".txt")
-  arq <- paste(DATASET_DIR,nmFile,sep="")
-  print(arq)
-  len <- length(readLines(arq))
-  print(paste(format(len,big.mark=" ",decimal.mark="."),"lines of text"))  
+removeOtherFeatures <- function(corp, numbers=TRUE, punctuation=TRUE, spaces=TRUE, stopwords=TRUE) {
+  if(numbers)  	   corp <- tm_map(corp, removeNumbers)
+  if(punctuation)  corp <- tm_map(corp, removePunctuation)
+  if(spaces)	   corp <- tm_map(corp, stripWhitespace)
+  if(stopwords)    corp <- tm_map(corp, removeWords, stopwords("english"))
+
+  # the list of 'stopwords' could be confirmed in next link, according to "quanteda.pdf" package documentation
+  # http://jmlr.csail.mit.edu/papers/volume5/lewis04a/a11-smart-stop-list/english.stop
+  # http://stackoverflow.com/questions/7927367/r-text-file-and-text-mining-how-to-load-data
+
+  return(corp)
 }
-
-lapply(cFiles, function(f) sizeOf(f))
-
-lapply(cFiles, function(f) linesOf(f))
